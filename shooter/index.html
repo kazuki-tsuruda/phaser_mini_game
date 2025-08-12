@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>shooter</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style>
+        #strength {
+            font-size: 32px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <font size="+2">てきをたおせ！（ボスをたおしたらゲームクリア！）</font>
+    </div>
+    <div>
+        <font size="+4"><label for="strength">強さ</label></font>
+        <select name="strength" id="strength">
+            <option value="strong">つよい</option>
+            <option value="normal" selected="">ふつう</option>
+            <option value="weak">よわい</option>
+        </select>
+    </div>
+    <div id="phaser-game"></div>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
