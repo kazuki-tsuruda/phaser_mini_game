@@ -1,7 +1,10 @@
 // ====== タイトルシーン ======
+import { ScoreManager } from '../managers/scoreManager.js';
+
 export class TitleScene extends Phaser.Scene {
   constructor() {
     super({ key: 'TitleScene' });
+    this.scoreManager = new ScoreManager();
   }
 
   preload() {
@@ -12,6 +15,7 @@ export class TitleScene extends Phaser.Scene {
   create() {
     this.createBackground();
     this.createTitle();
+    this.createBestScoreDisplay();
     this.setupDifficultySelector();
     this.createStartButton();
   }
@@ -26,6 +30,16 @@ export class TitleScene extends Phaser.Scene {
       color: '#ffffff',
       stroke: '#000000',
       strokeThickness: 6
+    }).setOrigin(0.5);
+  }
+
+  createBestScoreDisplay() {
+    const bestScore = this.scoreManager.getBestScore();
+    this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, `ベストスコア: ${bestScore}`, {
+      fontSize: '32px',
+      color: '#FFD700',
+      stroke: '#000000',
+      strokeThickness: 2
     }).setOrigin(0.5);
   }
 

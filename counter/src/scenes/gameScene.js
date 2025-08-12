@@ -14,7 +14,6 @@ class GameScene extends Phaser.Scene {
         this.startButton = null;
         this.stopButton = null;
         this.counterText = null;
-        this.messageText = null;
         this.bestScoreText = null;
         this.overlay = null;
         this.particles = null;
@@ -34,7 +33,6 @@ class GameScene extends Phaser.Scene {
 
         this.createBackground(gw, gh);
         this.createTitle(gw);
-        this.createMessage(gw);
         this.createCounterDisplay(gw, gh);
         this.createBestScoreDisplay(gw, gh);
         this.createButtons(gw, gh);
@@ -55,31 +53,37 @@ class GameScene extends Phaser.Scene {
      * 背景作成
      */
     createBackground(gw, gh) {
+        // よりモダンなグラデーション背景
         const bg = this.add.graphics();
-        bg.fillGradientStyle(0x87CEEB, 0x87CEEB, 0xE6E6FA, 0xE6E6FA, 1);
+        bg.fillGradientStyle(0x6366f1, 0x8b5cf6, 0x06b6d4, 0x3b82f6, 1);
         bg.fillRect(0, 0, gw, gh);
+        
+        // 装飾的な円形要素を追加
+        const circle1 = this.add.graphics();
+        circle1.fillStyle(0xffffff, 0.05);
+        circle1.fillCircle(gw * 0.2, gh * 0.3, 60);
+        
+        const circle2 = this.add.graphics();
+        circle2.fillStyle(0xffffff, 0.03);
+        circle2.fillCircle(gw * 0.8, gh * 0.7, 80);
     }
 
     /**
      * タイトル作成
      */
     createTitle(gw) {
-        const title = this.add.text(gw / 2, 30, '10秒チャレンジ', {
-            fontSize: '28px',
-            color: '#2c3e50',
-            fontWeight: 'bold'
-        });
-        title.setOrigin(0.5, 0);
+        // タイトルはHTMLで表示するので削除
     }
 
     /**
      * メッセージテキスト作成
      */
     createMessage(gw) {
-        this.messageText = this.add.text(gw / 2, 80, '10秒ちょうどで止めてください', {
+        this.messageText = this.add.text(gw / 2, 40, '10秒ちょうどで止めてください', {
             fontSize: '16px',
-            color: '#34495e',
-            align: 'center'
+            color: '#ffffff',
+            align: 'center',
+            fontWeight: '300'
         });
         this.messageText.setOrigin(0.5, 0);
     }
@@ -88,30 +92,41 @@ class GameScene extends Phaser.Scene {
      * カウンター表示作成
      */
     createCounterDisplay(gw, gh) {
-        // カウンター背景
+        // モダンなカウンター背景（グラスモーフィズム風）
         const counterBg = this.add.graphics();
-        counterBg.fillStyle(0xffffff);
-        counterBg.lineStyle(3, 0x3498db);
-        counterBg.fillRoundedRect(gw/2 - 120, gh/2 - 80, 240, 120, 15);
-        counterBg.strokeRoundedRect(gw/2 - 120, gh/2 - 80, 240, 120, 15);
+        counterBg.fillStyle(0xffffff, 0.15);
+        counterBg.lineStyle(2, 0xffffff, 0.3);
+        counterBg.fillRoundedRect(gw/2 - 140, gh/2 - 90, 280, 140, 25);
+        counterBg.strokeRoundedRect(gw/2 - 140, gh/2 - 90, 280, 140, 25);
 
-        // カウンターテキスト
+        // 内側のグロー効果
+        const innerGlow = this.add.graphics();
+        innerGlow.fillStyle(0x6366f1, 0.1);
+        innerGlow.fillRoundedRect(gw/2 - 135, gh/2 - 85, 270, 130, 20);
+
+        // カウンターテキスト（より大きく、モダンに）
         this.counterText = this.add.text(gw / 2, gh / 2 - 20, '0.00', {
-            fontSize: '72px',
-            color: '#2c3e50',
-            fontWeight: 'bold'
+            fontSize: '80px',
+            color: '#ffffff',
+            fontWeight: '200',
+            fontFamily: 'Segoe UI, sans-serif'
         });
         this.counterText.setOrigin(0.5, 0.5);
+        
+        // テキストにグロー効果
+        this.counterText.setStroke('#6366f1', 2);
+        this.counterText.setShadow(0, 0, 'rgba(99, 102, 241, 0.5)', 10, true, true);
     }
 
     /**
      * ベストスコア表示作成
      */
     createBestScoreDisplay(gw, gh) {
-        this.bestScoreText = this.add.text(gw / 2, gh / 2 + 60, 
+        this.bestScoreText = this.add.text(gw / 2, gh / 2 + 80, 
             this.bestScore ? `ベストスコア: ${this.bestScore.toFixed(2)}秒` : 'ベストスコアなし', {
             fontSize: '14px',
-            color: '#7f8c8d'
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontWeight: '300'
         });
         this.bestScoreText.setOrigin(0.5, 0.5);
     }
@@ -120,36 +135,79 @@ class GameScene extends Phaser.Scene {
      * ボタン作成
      */
     createButtons(gw, gh) {
+        // モダンなボタンスタイル
         const buttonStyle = {
-            fontSize: '24px',
-            padding: { x: 30, y: 15 },
-            borderRadius: 25
+            fontSize: '22px',
+            padding: { x: 40, y: 18 },
+            fontWeight: '300',
+            fontFamily: 'Segoe UI, sans-serif'
         };
 
-        // スタートボタン
-        this.startButton = this.add.text(gw / 2, gh - 80, 'スタート', {
-            ...buttonStyle,
-            color: '#fff',
-            backgroundColor: '#27ae60'
+        // スタートボタン（グラスモーフィズム風）
+        this.startButton = this.add.graphics();
+        this.startButton.fillStyle(0xffffff, 0.2);
+        this.startButton.lineStyle(1, 0xffffff, 0.3);
+        this.startButton.fillRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+        this.startButton.strokeRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+        
+        this.startButtonText = this.add.text(gw / 2, gh - 90, 'スタート', {
+            fontSize: '18px',
+            color: '#ffffff',
+            fontWeight: '400'
         });
-        this.startButton.setOrigin(0.5, 0.5);
-        this.startButton.setInteractive({ useHandCursor: true })
+        this.startButtonText.setOrigin(0.5, 0.5);
+        
+        // インタラクティブエリア
+        const startArea = this.add.zone(gw/2, gh - 90, 160, 80);
+        startArea.setInteractive({ useHandCursor: true })
             .on('pointerdown', this.startTimer.bind(this))
-            .on('pointerover', () => this.startButton.setScale(1.05))
-            .on('pointerout', () => this.startButton.setScale(1));
+            .on('pointerover', () => {
+                this.startButton.clear();
+                this.startButton.fillStyle(0xffffff, 0.3);
+                this.startButton.lineStyle(1, 0xffffff, 0.5);
+                this.startButton.fillRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+                this.startButton.strokeRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+            })
+            .on('pointerout', () => {
+                this.startButton.clear();
+                this.startButton.fillStyle(0xffffff, 0.2);
+                this.startButton.lineStyle(1, 0xffffff, 0.3);
+                this.startButton.fillRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+                this.startButton.strokeRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+            });
 
         // ストップボタン
-        this.stopButton = this.add.text(gw / 2, gh - 80, 'ストップ', {
-            ...buttonStyle,
-            color: '#fff',
-            backgroundColor: '#e74c3c'
+        this.stopButton = this.add.graphics();
+        this.stopButtonText = this.add.text(gw / 2, gh - 90, 'ストップ', {
+            fontSize: '18px',
+            color: '#ffffff',
+            fontWeight: '400'
         });
-        this.stopButton.setOrigin(0.5, 0.5);
-        this.stopButton.setVisible(false);
-        this.stopButton.setInteractive({ useHandCursor: true })
+        this.stopButtonText.setOrigin(0.5, 0.5);
+        this.stopButtonText.setVisible(false);
+
+        const stopArea = this.add.zone(gw/2, gh - 90, 160, 80);
+        stopArea.setVisible(false);
+        stopArea.setInteractive({ useHandCursor: true })
             .on('pointerdown', this.stopTimer.bind(this))
-            .on('pointerover', () => this.stopButton.setScale(1.05))
-            .on('pointerout', () => this.stopButton.setScale(1));
+            .on('pointerover', () => {
+                this.stopButton.clear();
+                this.stopButton.fillStyle(0xff4757, 0.4);
+                this.stopButton.lineStyle(1, 0xff4757, 0.6);
+                this.stopButton.fillRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+                this.stopButton.strokeRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+            })
+            .on('pointerout', () => {
+                this.stopButton.clear();
+                this.stopButton.fillStyle(0xff4757, 0.3);
+                this.stopButton.lineStyle(1, 0xff4757, 0.5);
+                this.stopButton.fillRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+                this.stopButton.strokeRoundedRect(gw/2 - 80, gh - 130, 160, 80, 25);
+            });
+
+        // 参照用に保存
+        this.startButtonArea = startArea;
+        this.stopButtonArea = stopArea;
     }
 
     /**
@@ -172,15 +230,24 @@ class GameScene extends Phaser.Scene {
      * タイマー開始
      */
     startTimer() {
+        // ボタンの表示切り替え
+        this.startButtonArea.setVisible(false);
+        this.startButtonText.setVisible(false);
         this.startButton.setVisible(false);
+        
+        this.stopButtonArea.setVisible(true);
+        this.stopButtonText.setVisible(true);
         this.stopButton.setVisible(true);
+        
+        // ストップボタンの描画
+        this.stopButton.clear();
+        this.stopButton.fillStyle(0xff4757, 0.3);
+        this.stopButton.lineStyle(1, 0xff4757, 0.5);
+        this.stopButton.fillRoundedRect(this.scale.width/2 - 80, this.scale.height - 130, 160, 80, 25);
+        this.stopButton.strokeRoundedRect(this.scale.width/2 - 80, this.scale.height - 130, 160, 80, 25);
+        
         this.startTime = this.time.now;
         this.isCounting = true;
-        this.messageText.setText('集中して...');
-        
-        // ボタンのスケールをリセット
-        this.startButton.setScale(1);
-        this.stopButton.setScale(1);
     }
 
     /**
@@ -189,8 +256,22 @@ class GameScene extends Phaser.Scene {
     stopTimer() {
         if (!this.isCounting) return;
         
+        // ボタンの表示切り替え
+        this.stopButtonArea.setVisible(false);
+        this.stopButtonText.setVisible(false);
         this.stopButton.setVisible(false);
+        
+        this.startButtonArea.setVisible(true);
+        this.startButtonText.setVisible(true);
         this.startButton.setVisible(true);
+        
+        // スタートボタンの再描画
+        this.startButton.clear();
+        this.startButton.fillStyle(0xffffff, 0.2);
+        this.startButton.lineStyle(1, 0xffffff, 0.3);
+        this.startButton.fillRoundedRect(this.scale.width/2 - 80, this.scale.height - 130, 160, 80, 25);
+        this.startButton.strokeRoundedRect(this.scale.width/2 - 80, this.scale.height - 130, 160, 80, 25);
+        
         this.isCounting = false;
         
         const elapsed = this.time.now - this.startTime;
@@ -206,20 +287,7 @@ class GameScene extends Phaser.Scene {
      * 結果表示
      */
     showResult(difference, elapsedSeconds) {
-        if (difference < 0.05) {
-            this.messageText.setText('🎉 パーフェクト！ 🎉');
-            this.messageText.setColor('#27ae60');
-            this.showParticleEffect();
-        } else if (difference < 0.2) {
-            this.messageText.setText('👍 とても良い！');
-            this.messageText.setColor('#f39c12');
-        } else if (difference < 0.5) {
-            this.messageText.setText('🙂 もう少し！');
-            this.messageText.setColor('#3498db');
-        } else {
-            this.messageText.setText('😅 頑張れ！');
-            this.messageText.setColor('#e74c3c');
-        }
+        // 結果表示は削除（HTMLのタイトルで十分なため）
     }
 
     /**
@@ -240,9 +308,9 @@ class GameScene extends Phaser.Scene {
             this.bestScore = elapsedSeconds;
             this.saveBestScore();
             this.bestScoreText.setText(`ベストスコア: ${this.bestScore.toFixed(2)}秒`);
-            this.bestScoreText.setColor('#27ae60');
+            this.bestScoreText.setColor('#10b981');
         } else {
-            this.bestScoreText.setColor('#7f8c8d');
+            this.bestScoreText.setColor('rgba(255, 255, 255, 0.8)');
         }
     }
 
@@ -250,10 +318,7 @@ class GameScene extends Phaser.Scene {
      * メッセージリセット（遅延実行）
      */
     resetMessageAfterDelay() {
-        this.time.delayedCall(3000, () => {
-            this.messageText.setText('10秒ちょうどで止めてください');
-            this.messageText.setColor('#34495e');
-        });
+        // メッセージ機能を削除したため、何も処理しない
     }
 
     /**
@@ -281,14 +346,14 @@ class GameScene extends Phaser.Scene {
             const textBounds = this.counterText.getBounds();
             const overlayHeight = textBounds.height * hidePercent;
             
-            // 透過を無くして完全に隠す
-            this.overlay.fillStyle(0x87CEEB, 1.0);
+            // モダンなオーバーレイ（グラデーション）
+            this.overlay.fillGradientStyle(0x6366f1, 0x8b5cf6, 0x6366f1, 0x8b5cf6, 1.0);
             this.overlay.fillRoundedRect(
                 textBounds.x, 
                 textBounds.y, 
                 textBounds.width, 
                 overlayHeight,
-                8
+                12
             );
             
             // 隠れている旨を表示
@@ -306,12 +371,15 @@ class GameScene extends Phaser.Scene {
             this.scale.width / 2, 
             this.scale.height / 2 - 30, 
             '???', {
-            fontSize: '36px',
-            color: '#e74c3c',
-            fontWeight: 'bold'
+            fontSize: '40px',
+            color: '#ffffff',
+            fontWeight: '300',
+            fontFamily: 'Segoe UI, sans-serif'
         });
         hiddenText.setOrigin(0.5, 0.5);
         hiddenText.setDepth(2);
+        hiddenText.setStroke('#6366f1', 2);
+        hiddenText.setShadow(0, 0, 'rgba(99, 102, 241, 0.8)', 8, true, true);
         
         this.time.delayedCall(100, () => {
             if (hiddenText) hiddenText.destroy();

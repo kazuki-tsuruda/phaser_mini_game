@@ -5,6 +5,7 @@ import { UIManager } from '../managers/uiManager.js';
 import { BackgroundManager } from '../managers/backgroundManager.js';
 import { PlayerManager } from '../managers/playerManager.js';
 import { EnemyManager } from '../managers/enemyManager.js';
+import { ScoreManager } from '../managers/scoreManager.js';
 
 // ====== メインシーン ======
 export class MainScene extends Phaser.Scene {
@@ -14,7 +15,8 @@ export class MainScene extends Phaser.Scene {
   }
 
   initializeProperties() {
-    this.gameState = new GameState();
+    this.scoreManager = new ScoreManager();
+    this.gameState = new GameState(this.scoreManager);
     this.uiManager = null;
     this.backgroundManager = null;
     this.playerManager = null;
@@ -52,7 +54,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   resetGame() {
-    this.gameState = new GameState();
+    this.gameState = new GameState(this.scoreManager);
   }
 
   setupManagers() {
@@ -71,6 +73,7 @@ export class MainScene extends Phaser.Scene {
 
   setupUI() {
     this.uiManager.createScoreText();
+    this.uiManager.createBestScoreText(this.gameState.getBestScore());
     this.uiManager.createTimeText();
     this.uiManager.createBossHealthUI();
     this.uiManager.createGameOverText();
@@ -160,6 +163,13 @@ export class MainScene extends Phaser.Scene {
   handleGameClear() {
     this.gameState.end();
     this.playerManager.setTint(0x00ff00);
+    
+    // 新記録チェック
+    if (this.gameState.isNewBestScore()) {
+      this.uiManager.showNewBestScoreMessage();
+      this.uiManager.updateBestScore(this.gameState.score);
+    }
+    
     this.uiManager.elements.gameOverText.setText('ゲームクリア！').setVisible(true);
     this.physics.pause();
     this.continueButton.setVisible(true);
@@ -168,6 +178,13 @@ export class MainScene extends Phaser.Scene {
   endGame() {
     this.gameState.end();
     this.playerManager.setTint(0xff0000);
+    
+    // 新記録チェック
+    if (this.gameState.isNewBestScore()) {
+      this.uiManager.showNewBestScoreMessage();
+      this.uiManager.updateBestScore(this.gameState.score);
+    }
+    
     this.uiManager.elements.gameOverText.setText('ゲームオーバー').setVisible(true);
     this.physics.pause();
     this.continueButton.setVisible(true);

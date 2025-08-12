@@ -13,6 +13,14 @@ export class UIManager {
     return this.elements.scoreText;
   }
 
+  createBestScoreText(bestScore = 0) {
+    this.elements.bestScoreText = this.scene.add.text(10, 70, `ベストスコア: ${bestScore}`, {
+      fontSize: '32px',
+      color: '#444444'
+    });
+    return this.elements.bestScoreText;
+  }
+
   createTimeText() {
     this.elements.timeText = this.scene.add.text(this.scene.scale.width - 10, 10, 'けいか時間: 0', {
       fontSize: '48px',
@@ -22,7 +30,7 @@ export class UIManager {
   }
 
   createBossHealthUI() {
-    const x = 300, y = 10;
+    const x = 300, y = 120; // ベストスコア表示のために少し下にずらす
     
     this.elements.bossHealthText = this.scene.add.text(x, y, '', {
       fontSize: '48px',
@@ -60,6 +68,30 @@ export class UIManager {
 
   updateScore(score) {
     this.elements.scoreText?.setText(`スコア: ${score}`);
+  }
+
+  updateBestScore(bestScore) {
+    this.elements.bestScoreText?.setText(`ベストスコア: ${bestScore}`);
+  }
+
+  showNewBestScoreMessage() {
+    // 新記録のメッセージを一時表示
+    const message = this.scene.add.text(
+      this.scene.scale.width / 2,
+      this.scene.scale.height / 2 - 200,
+      '🎉 新記録！ 🎉',
+      {
+        fontSize: '64px',
+        color: '#FFD700',
+        stroke: '#FF4444',
+        strokeThickness: 4
+      }
+    ).setOrigin(0.5);
+
+    // 3秒後に消去
+    this.scene.time.delayedCall(3000, () => {
+      message.destroy();
+    });
   }
 
   updateTime(time) {

@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブロックゲーム - 行橋屋</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        #game-canvas {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #game-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+            pointer-events: none;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            min-width: 280px;
+            animation: fadeInRight 1s ease-out 0.3s both;
+        }
+
+        .game-title {
+            font-size: 2rem;
+            font-weight: 300;
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+        }
+
+        .stats-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 500;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .control-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            width: 100%;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+            background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            left: 10%;
+            top: 20%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            right: 20%;
+            top: 30%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 40px;
+            height: 40px;
+            left: 60%;
+            top: 70%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            width: 50px;
+            height: 50px;
+            right: 10%;
+            bottom: 20%;
+            animation-delay: 3s;
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .game-over-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-over-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+                align-items: flex-start;
+            }
+            
+            .game-container {
+                flex-direction: column;
+                width: 100%;
+                gap: 1rem;
+            }
+            
+            .sidebar {
+                min-width: auto;
+                width: 100%;
+                order: -1;
+                padding: 1rem;
+            }
+            
+            .controls-container {
+                display: none;
+            }
+            
+            #game-canvas {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="game-container">
+        <div id="game-canvas"></div>
+        
+        <div class="sidebar">
+            <h1 class="game-title">🧩 ブロックゲーム</h1>
+            
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-label">スコア</span>
+                    <span class="stat-value" id="score-display">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">レベル</span>
+                    <span class="stat-value" id="level-display">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">ライン</span>
+                    <span class="stat-value" id="lines-display">0</span>
+                </div>
+            </div>
+
+            <div class="controls-container">
+                <h3 class="controls-title">操作方法</h3>
+                <div class="control-item">
+                    <span>移動</span>
+                    <div>
+                        <span class="key">←</span>
+                        <span class="key">→</span>
+                    </div>
+                </div>
+                <div class="control-item">
+                    <span>落下速度UP</span>
+                    <span class="key">↓</span>
+                </div>
+                <div class="control-item">
+                    <span>回転</span>
+                    <span class="key">↑</span>
+                </div>
+                <div class="control-item">
+                    <span>ハードドロップ</span>
+                    <span class="key">Space</span>
+                </div>
+                <div class="control-item">
+                    <span>リスタート</span>
+                    <span class="key">R</span>
+                </div>
+            </div>
+
+            <a href="/" class="back-button">← トップページに戻る</a>
+        </div>
+    </div>
+
+    <script>
+        // ゲーム設定
+        const GRID_WIDTH = 10;
+        const GRID_HEIGHT = 20;
+        const BLOCK_SIZE = 30;
+        const GAME_WIDTH = GRID_WIDTH * BLOCK_SIZE;
+        const GAME_HEIGHT = GRID_HEIGHT * BLOCK_SIZE;
+        
+        // モバイル判定
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+        // テトリスのピース定義
+        const TETROMINOS = {
+            I: {
+                shape: [
+                    [1, 1, 1, 1]
+                ],
+                color: 0x00FFFF
+            },
+            O: {
+                shape: [
+                    [1, 1],
+                    [1, 1]
+                ],
+                color: 0xFFFF00
+            },
+            T: {
+                shape: [
+                    [0, 1, 0],
+                    [1, 1, 1]
+                ],
+                color: 0x800080
+            },
+            S: {
+                shape: [
+                    [0, 1, 1],
+                    [1, 1, 0]
+                ],
+                color: 0x00FF00
+            },
+            Z: {
+                shape: [
+                    [1, 1, 0],
+                    [0, 1, 1]
+                ],
+                color: 0xFF0000
+            },
+            J: {
+                shape: [
+                    [1, 0, 0],
+                    [1, 1, 1]
+                ],
+                color: 0x0000FF
+            },
+            L: {
+                shape: [
+                    [0, 0, 1],
+                    [1, 1, 1]
+                ],
+                color: 0xFF8000
+            }
+        };
+
+        class TetrisScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'TetrisScene' });
+            }
+
+            preload() {
+                // 1x1のホワイトピクセルを作成（ブロック描画用）
+                this.add.graphics()
+                    .fillStyle(0xffffff)
+                    .fillRect(0, 0, 1, 1)
+                    .generateTexture('block', 1, 1);
+            }
+
+            create() {
+                this.setupGame();
+                this.setupInput();
+                this.setupUI();
+                this.startGame();
+            }
+
+            setupGame() {
+                // ゲーム状態の初期化
+                this.grid = Array(GRID_HEIGHT).fill().map(() => Array(GRID_WIDTH).fill(0));
+                this.gridColors = Array(GRID_HEIGHT).fill().map(() => Array(GRID_WIDTH).fill(0));
+                this.score = 0;
+                this.level = 1;
+                this.lines = 0;
+                this.gameOver = false;
+                this.dropTime = 0;
+                this.dropInterval = 1000; // 1秒
+
+                // 現在のピース
+                this.currentPiece = null;
+                this.currentX = 0;
+                this.currentY = 0;
+
+                // 描画グループ
+                this.gridGraphics = this.add.group();
+                this.pieceGraphics = this.add.group();
+
+                // グリッドの背景を描画
+                this.drawGrid();
+            }
+
+            setupInput() {
+                // キーボード操作
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.rKey = this.input.keyboard.addKey('R');
+                this.spaceKey = this.input.keyboard.addKey('SPACE');
+                
+                // キーイベントのリスナー
+                this.input.keyboard.on('keydown-LEFT', () => this.movePiece(-1, 0));
+                this.input.keyboard.on('keydown-RIGHT', () => this.movePiece(1, 0));
+                this.input.keyboard.on('keydown-DOWN', () => this.dropPiece());
+                this.input.keyboard.on('keydown-UP', () => this.rotatePiece());
+                this.input.keyboard.on('keydown-SPACE', () => this.hardDrop());
+                this.input.keyboard.on('keydown-R', () => this.restartGame());
+
+                // モバイル用タッチボタン
+                if (isMobile) {
+                    this.createTouchControls();
+                }
+            }
+
+            setupUI() {
+                this.gameOverText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '', {
+                    fontSize: '32px',
+                    fontWeight: 'bold',
+                    color: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setOrigin(0.5).setDepth(1000);
+            }
+
+            drawGrid() {
+                // グリッドの境界線を描画
+                const graphics = this.add.graphics();
+                graphics.lineStyle(1, 0x333333, 0.3);
+                
+                // 縦線
+                for (let x = 0; x <= GRID_WIDTH; x++) {
+                    graphics.moveTo(x * BLOCK_SIZE, 0);
+                    graphics.lineTo(x * BLOCK_SIZE, GRID_HEIGHT * BLOCK_SIZE);
+                }
+                
+                // 横線
+                for (let y = 0; y <= GRID_HEIGHT; y++) {
+                    graphics.moveTo(0, y * BLOCK_SIZE);
+                    graphics.lineTo(GRID_WIDTH * BLOCK_SIZE, y * BLOCK_SIZE);
+                }
+                
+                graphics.strokePath();
+            }
+
+            startGame() {
+                this.spawnNewPiece();
+            }
+
+            spawnNewPiece() {
+                const pieces = Object.keys(TETROMINOS);
+                const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+                this.currentPiece = TETROMINOS[randomPiece];
+                
+                this.currentX = Math.floor(GRID_WIDTH / 2) - Math.floor(this.currentPiece.shape[0].length / 2);
+                this.currentY = 0;
+
+                // 新しいピースが配置できるかチェック
+                if (this.checkCollision(this.currentX, this.currentY, this.currentPiece.shape)) {
+                    this.endGame();
+                    return;
+                }
+
+                this.drawPiece();
+            }
+
+            movePiece(dx, dy) {
+                if (this.gameOver || !this.currentPiece) return;
+
+                const newX = this.currentX + dx;
+                const newY = this.currentY + dy;
+
+                if (!this.checkCollision(newX, newY, this.currentPiece.shape)) {
+                    this.clearPiece();
+                    this.currentX = newX;
+                    this.currentY = newY;
+                    this.drawPiece();
+                }
+            }
+
+            dropPiece() {
+                if (this.gameOver || !this.currentPiece) return;
+
+                if (!this.checkCollision(this.currentX, this.currentY + 1, this.currentPiece.shape)) {
+                    this.clearPiece();
+                    this.currentY++;
+                    this.drawPiece();
+                } else {
+                    this.placePiece();
+                }
+            }
+
+            rotatePiece() {
+                if (this.gameOver || !this.currentPiece) return;
+
+                const rotated = this.rotateMatrix(this.currentPiece.shape);
+                
+                if (!this.checkCollision(this.currentX, this.currentY, rotated)) {
+                    this.clearPiece();
+                    this.currentPiece.shape = rotated;
+                    this.drawPiece();
+                }
+            }
+
+            hardDrop() {
+                if (this.gameOver || !this.currentPiece) return;
+
+                this.clearPiece();
+                
+                // 一番下まで落とす
+                while (!this.checkCollision(this.currentX, this.currentY + 1, this.currentPiece.shape)) {
+                    this.currentY++;
+                }
+                
+                this.drawPiece();
+                this.placePiece();
+            }
+
+            createTouchControls() {
+                const buttonSize = 50;
+                const margin = 15;
+                const bottomY = GAME_HEIGHT - buttonSize - margin;
+                
+                // 左移動ボタン
+                const leftBtn = this.add.rectangle(margin + buttonSize/2, bottomY, buttonSize, buttonSize, 0x333333, 0.8)
+                    .setInteractive()
+                    .on('pointerdown', () => this.movePiece(-1, 0));
+                leftBtn.setStrokeStyle(2, 0x666666);
+                this.add.text(leftBtn.x, leftBtn.y, '←', { fontSize: '20px', color: '#ffffff' }).setOrigin(0.5);
+
+                // 右移動ボタン
+                const rightBtn = this.add.rectangle(margin * 2 + buttonSize * 1.5, bottomY, buttonSize, buttonSize, 0x333333, 0.8)
+                    .setInteractive()
+                    .on('pointerdown', () => this.movePiece(1, 0));
+                rightBtn.setStrokeStyle(2, 0x666666);
+                this.add.text(rightBtn.x, rightBtn.y, '→', { fontSize: '20px', color: '#ffffff' }).setOrigin(0.5);
+
+                // 下移動ボタン
+                const downBtn = this.add.rectangle(margin * 3 + buttonSize * 2.5, bottomY, buttonSize, buttonSize, 0x333333, 0.8)
+                    .setInteractive()
+                    .on('pointerdown', () => this.dropPiece());
+                downBtn.setStrokeStyle(2, 0x666666);
+                this.add.text(downBtn.x, downBtn.y, '↓', { fontSize: '20px', color: '#ffffff' }).setOrigin(0.5);
+
+                // 回転ボタン
+                const rotateBtn = this.add.rectangle(GAME_WIDTH - margin - buttonSize/2, bottomY, buttonSize, buttonSize, 0x666666, 0.8)
+                    .setInteractive()
+                    .on('pointerdown', () => this.rotatePiece());
+                rotateBtn.setStrokeStyle(2, 0x999999);
+                this.add.text(rotateBtn.x, rotateBtn.y, 'かいてん', { fontSize: '8px', color: '#ffffff' }).setOrigin(0.5);
+
+                // ハードドロップボタン
+                const hardDropBtn = this.add.rectangle(GAME_WIDTH - margin * 2 - buttonSize * 1.5, bottomY, buttonSize, buttonSize, 0x999999, 0.8)
+                    .setInteractive()
+                    .on('pointerdown', () => this.hardDrop());
+                hardDropBtn.setStrokeStyle(2, 0xcccccc);
+                this.add.text(hardDropBtn.x, hardDropBtn.y, 'ドロップ', { fontSize: '7px', color: '#ffffff' }).setOrigin(0.5);
+
+                // リスタートボタン（右上）
+                const restartBtn = this.add.rectangle(GAME_WIDTH - margin - buttonSize/2, margin + buttonSize/2, buttonSize, buttonSize, 0x444444, 0.8)
+                    .setInteractive()
+                    .on('pointerdown', () => this.restartGame());
+                restartBtn.setStrokeStyle(2, 0x777777);
+                this.add.text(restartBtn.x, restartBtn.y, 'R', { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+            }
+
+            rotateMatrix(matrix) {
+                const rows = matrix.length;
+                const cols = matrix[0].length;
+                const rotated = Array(cols).fill().map(() => Array(rows).fill(0));
+                
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        rotated[j][rows - 1 - i] = matrix[i][j];
+                    }
+                }
+                
+                return rotated;
+            }
+
+            checkCollision(x, y, shape) {
+                for (let py = 0; py < shape.length; py++) {
+                    for (let px = 0; px < shape[py].length; px++) {
+                        if (shape[py][px]) {
+                            const newX = x + px;
+                            const newY = y + py;
+                            
+                            if (newX < 0 || newX >= GRID_WIDTH || 
+                                newY >= GRID_HEIGHT || 
+                                (newY >= 0 && this.grid[newY][newX])) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            placePiece() {
+                // ピースをグリッドに固定
+                for (let py = 0; py < this.currentPiece.shape.length; py++) {
+                    for (let px = 0; px < this.currentPiece.shape[py].length; px++) {
+                        if (this.currentPiece.shape[py][px]) {
+                            const x = this.currentX + px;
+                            const y = this.currentY + py;
+                            if (y >= 0) {
+                                this.grid[y][x] = 1;
+                                this.gridColors[y][x] = this.currentPiece.color;
+                            }
+                        }
+                    }
+                }
+
+                this.clearPiece();
+                this.drawFixedBlocks();
+                this.checkLines();
+                this.spawnNewPiece();
+            }
+
+            checkLines() {
+                let linesCleared = 0;
+                
+                for (let y = GRID_HEIGHT - 1; y >= 0; y--) {
+                    if (this.grid[y].every(cell => cell === 1)) {
+                        // ラインを削除
+                        this.grid.splice(y, 1);
+                        this.grid.unshift(Array(GRID_WIDTH).fill(0));
+                        this.gridColors.splice(y, 1);
+                        this.gridColors.unshift(Array(GRID_WIDTH).fill(0));
+                        
+                        linesCleared++;
+                        y++; // 同じ行を再チェック
+                    }
+                }
+
+                if (linesCleared > 0) {
+                    this.lines += linesCleared;
+                    this.score += linesCleared * 100 * this.level;
+                    this.level = Math.floor(this.lines / 10) + 1;
+                    this.dropInterval = Math.max(100, 1000 - (this.level - 1) * 100);
+                    
+                    this.updateUI();
+                    this.drawFixedBlocks();
+                }
+            }
+
+            drawPiece() {
+                if (!this.currentPiece) return;
+
+                for (let py = 0; py < this.currentPiece.shape.length; py++) {
+                    for (let px = 0; px < this.currentPiece.shape[py].length; px++) {
+                        if (this.currentPiece.shape[py][px]) {
+                            const x = (this.currentX + px) * BLOCK_SIZE;
+                            const y = (this.currentY + py) * BLOCK_SIZE;
+                            
+                            if (this.currentY + py >= 0) {
+                                const block = this.add.rectangle(
+                                    x + BLOCK_SIZE / 2, 
+                                    y + BLOCK_SIZE / 2, 
+                                    BLOCK_SIZE - 2, 
+                                    BLOCK_SIZE - 2, 
+                                    this.currentPiece.color
+                                );
+                                block.setStrokeStyle(1, 0xffffff, 0.5);
+                                this.pieceGraphics.add(block);
+                            }
+                        }
+                    }
+                }
+            }
+
+            clearPiece() {
+                this.pieceGraphics.clear(true, true);
+            }
+
+            drawFixedBlocks() {
+                this.gridGraphics.clear(true, true);
+                
+                for (let y = 0; y < GRID_HEIGHT; y++) {
+                    for (let x = 0; x < GRID_WIDTH; x++) {
+                        if (this.grid[y][x]) {
+                            const block = this.add.rectangle(
+                                x * BLOCK_SIZE + BLOCK_SIZE / 2,
+                                y * BLOCK_SIZE + BLOCK_SIZE / 2,
+                                BLOCK_SIZE - 2,
+                                BLOCK_SIZE - 2,
+                                this.gridColors[y][x]
+                            );
+                            block.setStrokeStyle(1, 0xffffff, 0.3);
+                            this.gridGraphics.add(block);
+                        }
+                    }
+                }
+            }
+
+            updateUI() {
+                // サイドバーのスコア表示を更新
+                document.getElementById('score-display').textContent = this.score;
+                document.getElementById('level-display').textContent = this.level;
+                document.getElementById('lines-display').textContent = this.lines;
+            }
+
+            endGame() {
+                this.gameOver = true;
+                this.gameOverText.setText('ゲームオーバー\nRボタンをおしてください。');
+            }
+
+            restartGame() {
+                this.gridGraphics.clear(true, true);
+                this.pieceGraphics.clear(true, true);
+                this.gameOverText.setText('');
+                this.setupGame();
+                this.updateUI();
+                this.startGame();
+            }
+
+            update(time, delta) {
+                if (this.gameOver) return;
+
+                this.dropTime += delta;
+                if (this.dropTime >= this.dropInterval) {
+                    this.dropPiece();
+                    this.dropTime = 0;
+                }
+            }
+        }
+
+        // Phaser設定
+        const config = {
+            type: Phaser.AUTO,
+            width: GAME_WIDTH,
+            height: GAME_HEIGHT,
+            parent: 'game-canvas',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            transparent: true,
+            scene: TetrisScene
+        };
+
+        // ゲーム開始
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+</html>
